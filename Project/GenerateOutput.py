@@ -1,22 +1,26 @@
 import Recogniser
 import Identifier
-import threading
+from threading import Thread
 
-class myThread(threading.Thread):
-    def __init__(self, str):
+class myThread(Thread):
+    def __init__(self, str1, str2, check):
         super(myThread, self).__init__()
-        self.threadData = str
-        self._stop_event = threading.Event()
+        self.image_loc = str1
+        self.save_loc = str2
+        self.check_state = check
+        print(self.check_state)
+        
     def run(self):
         print('Recogniser')
         recogniser = Recogniser.Recogniser()
-        image, lines, words, characters = recogniser.recognise(self.threadData)
+        image, lines, words, characters = recogniser.recognise(self.image_loc)
 
         print('Identifier')
         identifier = Identifier.Identifier()
         characters = identifier.identify(image, characters)
 
         print('Generating Output')
+        print("thread")
         for i in range(0, len(words)):
             string = ''
             for j in range(words[i][4], words[i][5] + 1):
@@ -25,24 +29,12 @@ class myThread(threading.Thread):
         
         for w in words:
             print(w[6], end = ' ')
-        '''
-        try:
-            thread1.stop()
-        except:
-            print("Thread could not be stopped")
-        '''
+        print ('\n')
+     
 
-
-        def stop(self):
-            self._stop_event.set()
-
-        def stopped(self):
-            return self._stop_event.is_set()
-
-
-def started(str1):
-    thread1 = myThread(str1)
-    thread1.start()
+def started(str1, str2, check):
+    thread1 = myThread(str1, str2, check).start()
+   
 
 '''
 if __name__ == '__main__':
