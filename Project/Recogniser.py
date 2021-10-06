@@ -4,7 +4,9 @@ import math
 import matplotlib.pyplot as plt
 
 
-class Recogniser:    
+class Recogniser:
+    K = 12
+    
 
 ####################################################################################################    
     def reshape1(self, img):
@@ -51,6 +53,7 @@ class Recogniser:
         center = (W / 2, H / 2)    
         M = cv2.getRotationMatrix2D(center, ang, 1.0)
         rotated = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
+        cv2.imwrite("deskwed2.png", rotated)
         return rotated
  
     
@@ -65,14 +68,14 @@ class Recogniser:
         uppers = [y for y in range(H-1) if hist[y]<=th and hist[y+1]>th]
         lowers = [y for y in range(H-1) if hist[y]>th and hist[y+1]<=th]
         
-        lines = [list((uppers[i], lowers[i], lowers[i] - uppers[i])) \
-                 for i in range(0,len(uppers))]
+        lines = [list((uppers[i], lowers[i], lowers[i] - uppers[i])) for i in range(0,len(uppers))]
         
         sm = 0
         for i in range(0,len(lines)):
             sm += lines[i][2]
         avg = sm / len(lines)
         th = avg*.25
+        #print(avg, th)
 
         final_lines = []
         all_done = False
@@ -204,15 +207,21 @@ class Recogniser:
 ####################################################################################################    
     def recognise(self, imgPath):
         self.imgPath = imgPath
-        imgGray = cv2.imread(imgPath,0)
+        imgOrig = cv2.imread(imgPath)
+        imgGray = cv2.cvtColor(imgOrig, cv2.COLOR_BGR2GRAY)
         imgGray = cv2.fastNlMeansDenoising(imgGray,10,7,21)
-        imgBinInv = cv2.threshold(imgGray, 127, 255, cv2.THRESH_BINARY_INV|cv2.THRESH_OTSU)[-1]
-        self.K = 12       
+        imgBinInv = cv2.threshold(imgGray, 127, 255, cv2.THRESH_BINARY_INV)[-1]
+                
         imgBinInvMod = self.reshape1(imgBinInv)
+        #print('mod1')
         imgBinInvMod = self.reshape2(imgBinInvMod, self.K)
+        #print('mod2')
         self.imgBinInvDeskwed = self.deskew(imgBinInvMod)
+        #print('deskwed')
         self.imgBinDeskwed = cv2.bitwise_not(self.imgBinInvDeskwed)
+        #print('deskewinv')
         self.imgOrigDeskwed = cv2.cvtColor(self.imgBinDeskwed, cv2.COLOR_GRAY2BGR)
+        #print('modcolor')
         
         self.lines = self.detectLines()
         
@@ -261,7 +270,7 @@ class Recogniser:
             
             
         
-        img1 = np.copy(self.imgOrigDeskwed)
+        '''img1 = np.copy(self.imgOrigDeskwed)
         img2 = np.copy(self.imgOrigDeskwed)
         img3 = np.copy(self.imgOrigDeskwed)
         
@@ -276,7 +285,7 @@ class Recogniser:
         for c in self.characters:
             cv2.rectangle(img3, (c[0], c[1]), (c[2], c[3]), \
                           (0, 255, 0), 1)
-        '''
+        
         cv2.imwrite('a0.png', imgBinInvMod)
         cv2.imwrite('a1.png', self.imgBinInvDeskwed)
         cv2.imwrite('a2.png', self.imgBinDeskwed)
@@ -284,8 +293,8 @@ class Recogniser:
         cv2.imwrite('a4.png', self.imgBinInvBlur)
         cv2.imwrite('a5.png', img1)
         cv2.imwrite('a6.png', img2)
-        cv2.imwrite('a7.png', img3)
-        '''
+        cv2.imwrite('a7.png', img3)'''
+        
         return self.imgBinInvDeskwed, self.lines, self.words, self.characters
     
         
